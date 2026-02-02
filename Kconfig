@@ -1,0 +1,35 @@
+#
+# Copyright (c) 2026 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+menu "Nordic WiFi SoftAP Webserver"
+
+config APP_WIFI_SSID
+	string "WiFi SoftAP SSID"
+	default "nRF70-WebServer"
+	help
+	  SSID of the WiFi SoftAP to create
+
+config APP_WIFI_PASSWORD
+	string "WiFi SoftAP Password"
+	default "12345678"
+	help
+	  Password for WiFi SoftAP (min 8 characters for WPA2)
+
+config APP_HTTP_PORT
+	int "HTTP Server Port"
+	default 80
+	help
+	  HTTP server port number
+
+rsource "src/modules/network/Kconfig.network"
+rsource "src/modules/button/Kconfig.button"
+rsource "src/modules/led/Kconfig.led"
+rsource "src/modules/wifi/Kconfig.wifi"
+rsource "src/modules/webserver/Kconfig.webserver"
+
+endmenu
+
+source "Kconfig.zephyr"

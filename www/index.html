@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nordic WiFi Controller</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 Nordic WiFi SoftAP Controller</h1>
+            <p class="subtitle">nRF7002DK / nRF54LM20DK+nRF7002EBII Web Interface</p>
+        </header>
+
+        <main>
+            <!-- Button Status Section -->
+            <section class="card">
+                <h2>🔘 Button Status</h2>
+                <div class="button-grid" id="button-grid">
+                    <p class="empty-state" id="button-placeholder">Waiting for button data...</p>
+                </div>
+            </section>
+
+            <!-- LED Control Section -->
+            <section class="card">
+                <h2>💡 LED Control</h2>
+                <div class="led-grid" id="led-grid">
+                    <p class="empty-state" id="led-placeholder">Waiting for LED data...</p>
+                </div>
+            </section>
+
+            <!-- System Info Section -->
+            <section class="card info-section">
+                <h2>ℹ️ System Information</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">WiFi SSID:</span>
+                        <span class="info-value" id="wifi-ssid">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">IP Address:</span>
+                        <span class="info-value">192.168.7.1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Connection:</span>
+                        <span class="info-value status-online" id="connection-status">⬤ Connected</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Auto-Refresh:</span>
+                        <span class="info-value">Every 500ms</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by Nordic Semiconductor nRF Connect SDK</p>
+        </footer>
+    </div>
+
+    <template id="button-template">
+        <div class="button-status">
+            <div class="button-icon"></div>
+            <div class="button-info">
+                <div class="button-name"></div>
+                <div class="button-state">Released</div>
+                <div class="button-count">Presses: <span>0</span></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="led-template">
+        <div class="led-control">
+            <div class="led-indicator"></div>
+            <div class="led-name"></div>
+            <div class="led-buttons">
+                <button class="btn btn-on" data-action="on">ON</button>
+                <button class="btn btn-off" data-action="off">OFF</button>
+                <button class="btn btn-toggle" data-action="toggle">Toggle</button>
+            </div>
+        </div>
+    </template>
+
+    <script src="main.js"></script>
+</body>
+</html>

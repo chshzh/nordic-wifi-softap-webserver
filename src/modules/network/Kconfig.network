@@ -1,0 +1,38 @@
+# Network module Kconfig
+
+config NETWORK_MODULE
+	bool "Network event management module"
+	default y
+	help
+	  Enable network event management module for handling
+	  network interface events, WiFi SoftAP events, and
+	  station connection tracking.
+
+choice NETWORK_MODULE_LOG_LEVEL_CHOICE
+	prompt "Network module log level"
+	default NETWORK_MODULE_LOG_LEVEL_INF
+
+config NETWORK_MODULE_LOG_LEVEL_OFF
+	bool "Off"
+
+config NETWORK_MODULE_LOG_LEVEL_ERR
+	bool "Error"
+
+config NETWORK_MODULE_LOG_LEVEL_WRN
+	bool "Warning"
+
+config NETWORK_MODULE_LOG_LEVEL_INF
+	bool "Info"
+
+config NETWORK_MODULE_LOG_LEVEL_DBG
+	bool "Debug"
+
+endchoice
+
+config NETWORK_MODULE_LOG_LEVEL
+	int
+	default 0 if NETWORK_MODULE_LOG_LEVEL_OFF
+	default 1 if NETWORK_MODULE_LOG_LEVEL_ERR
+	default 2 if NETWORK_MODULE_LOG_LEVEL_WRN
+	default 3 if NETWORK_MODULE_LOG_LEVEL_INF
+	default 4 if NETWORK_MODULE_LOG_LEVEL_DBG

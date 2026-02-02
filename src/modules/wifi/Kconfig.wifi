@@ -1,0 +1,19 @@
+#
+# Copyright (c) 2026 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+config WIFI_MODULE
+	bool "WiFi Module"
+	default y
+	help
+	  Enable WiFi SoftAP module with SMF state machine
+
+if WIFI_MODULE
+
+module = WIFI_MODULE
+module-str = wifi_module
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # WIFI_MODULE

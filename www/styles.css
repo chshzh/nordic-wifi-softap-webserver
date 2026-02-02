@@ -1,0 +1,312 @@
+/* 
+ * Nordic WiFi SoftAP Webserver - Main Styles
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --nordic-blue: #00a9ce;
+    --nordic-dark: #003350;
+    --button-pressed: #4caf50;
+    --button-released: #9e9e9e;
+    --led-on: #ffc107;
+    --led-off: #424242;
+    --bg-color: #f5f5f5;
+    --card-bg: #ffffff;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --border-color: #e0e0e0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--bg-color) 0%, #e3f2fd 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, var(--nordic-blue) 0%, var(--nordic-dark) 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card h2 {
+    color: var(--nordic-dark);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    border-bottom: 2px solid var(--nordic-blue);
+    padding-bottom: 10px;
+}
+
+/* Button Grid */
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 15px 0;
+}
+
+.button-status {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s;
+}
+
+.button-status.active {
+    border-color: var(--button-pressed);
+    background: #e8f5e9;
+}
+
+.button-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--nordic-blue);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.button-status.active .button-icon {
+    background: var(--button-pressed);
+    animation: pulse 0.6s ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.button-info {
+    flex-grow: 1;
+}
+
+.button-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.button-state {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 3px;
+}
+
+.button-count {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.button-count span {
+    font-weight: bold;
+    color: var(--nordic-blue);
+}
+
+/* LED Grid */
+.led-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.led-control {
+    text-align: center;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+}
+
+.led-indicator {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--led-off);
+    margin: 0 auto 15px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s;
+}
+
+.led-indicator.on {
+    background: var(--led-on);
+    box-shadow: 0 0 20px var(--led-on), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.led-name {
+    font-weight: 600;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.led-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-on {
+    background: #4caf50;
+    color: white;
+}
+
+.btn-on:hover {
+    background: #45a049;
+}
+
+.btn-off {
+    background: #f44336;
+    color: white;
+}
+
+.btn-off:hover {
+    background: #da190b;
+}
+
+.btn-toggle {
+    background: var(--nordic-blue);
+    color: white;
+}
+
+.btn-toggle:hover {
+    background: #008db3;
+}
+
+/* Info Section */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: #f9f9f9;
+    border-radius: 6px;
+    border-left: 4px solid var(--nordic-blue);
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.status-online {
+    color: #4caf50;
+}
+
+.status-offline {
+    color: #f44336;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.footer-note {
+    margin-top: 5px;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .button-grid,
+    .led-grid,
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}

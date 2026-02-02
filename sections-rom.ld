@@ -1,0 +1,1 @@
+ITERABLE_SECTION_ROM(http_resource_desc_webserver_service, Z_LINK_ITERABLE_SUBALIGN)

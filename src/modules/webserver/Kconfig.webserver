@@ -1,0 +1,19 @@
+#
+# Copyright (c) 2026 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+config WEBSERVER_MODULE
+	bool "Webserver Module"
+	default y
+	help
+	  Enable HTTP webserver module
+
+if WEBSERVER_MODULE
+
+module = WEBSERVER_MODULE
+module-str = webserver_module
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # WEBSERVER_MODULE
