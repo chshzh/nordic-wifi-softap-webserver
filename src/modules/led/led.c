@@ -78,10 +78,11 @@ static void led_off_entry(void *obj)
 	struct led_state_msg state_msg;
 	
 	/* Turn LED off */
-	dk_set_led_off(sm->led_number - 1);
+	dk_set_led_off(sm->led_number);
 	sm->is_on = false;
 	
-	LOG_DBG("LED %d turned OFF", sm->led_number);
+	const char *label = app_led_label(sm->led_number);
+	LOG_DBG("%s turned OFF", label);
 	
 	/* Publish state */
 	state_msg.led_number = sm->led_number;
@@ -111,10 +112,11 @@ static void led_on_entry(void *obj)
 	struct led_state_msg state_msg;
 	
 	/* Turn LED on */
-	dk_set_led_on(sm->led_number - 1);
+	dk_set_led_on(sm->led_number);
 	sm->is_on = true;
 	
-	LOG_DBG("LED %d turned ON", sm->led_number);
+	const char *label = app_led_label(sm->led_number);
+	LOG_DBG("%s turned ON", label);
 	
 	/* Publish state */
 	state_msg.led_number = sm->led_number;
@@ -146,12 +148,12 @@ static void led_cmd_listener(const struct zbus_channel *chan)
 {
 	const struct led_msg *msg = zbus_chan_const_msg(chan);
 	
-	if (msg->led_number < 1 || msg->led_number > NUM_LEDS) {
-		LOG_WRN("Invalid LED number: %d", msg->led_number);
+	if (msg->led_number >= NUM_LEDS) {
+		LOG_WRN("Invalid LED number: %d (max: %d)", msg->led_number, NUM_LEDS - 1);
 		return;
 	}
 	
-	struct led_sm_object *sm = &led_sm[msg->led_number - 1];
+	struct led_sm_object *sm = &led_sm[msg->led_number];
 	
 	sm->pending_command = msg->type;
 	sm->has_pending_command = true;
@@ -172,11 +174,11 @@ ZBUS_CHAN_ADD_OBS(LED_CMD_CHAN, led_cmd_listener_def, 0);
 
 int led_get_state(uint8_t led_number, bool *state)
 {
-	if (led_number < 1 || led_number > NUM_LEDS || !state) {
+	if (led_number >= NUM_LEDS || !state) {
 		return -EINVAL;
 	}
 	
-	*state = led_sm[led_number - 1].is_on;
+	*state = led_sm[led_number].is_on;
 	return 0;
 }
 
@@ -200,7 +202,7 @@ int led_get_all_states_json(char *buf, size_t buf_len)
 		const char *led_name = app_led_label(i);
 		written = snprintf(buf + offset, remaining,
 				 "{\"number\":%d,\"name\":\"%s\",\"is_on\":%s}%s",
-				 i + 1,
+				 i,
 				 led_name ? led_name : "",
 				 led_sm[i].is_on ? "true" : "false",
 				 is_last ? "" : ",");
@@ -237,7 +239,7 @@ int led_module_init(void)
 	
 	/* Initialize state machines for each LED */
 	for (int i = 0; i < NUM_LEDS; i++) {
-		led_sm[i].led_number = i + 1;
+		led_sm[i].led_number = i;
 		led_sm[i].is_on = false;
 		led_sm[i].has_pending_command = false;
 		

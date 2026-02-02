@@ -75,6 +75,9 @@ west build -p -b nrf54lm20dk/nrf54lm20a/cpuapp -- \
 west flash
 ```
 
+> **⚠️ Hardware Limitation (nRF54LM20DK + nRF7002EBII):**  
+> When using the nRF7002EBII shield, **BUTTON3 is not available** due to pin conflicts with the shield's UART30 configuration (the shield overlay deletes `button_3`). Only **BUTTON0, BUTTON1, and BUTTON2** are functional on this hardware combination. All 4 LEDs remain available.
+
 ### Connect
 
 1. **Power on** the development kit
@@ -132,14 +135,14 @@ Static IP configuration:
 
 ### Button Status Panel
 
-Displays real-time status for all 4 buttons:
+Displays real-time status for all buttons (2 on nRF7002DK, 3 on nRF54LM20DK+nRF7002EBII):
 - Current state (Pressed/Released)
 - Total press count
 - Visual indicator with animation
 
 ### LED Control Panel
 
-Individual control for all 4 LEDs:
+Individual control for LEDs (2 on nRF7002DK, 4 on nRF54LM20DK+nRF7002EBII):
 - **ON** - Turn LED on
 - **OFF** - Turn LED off
 - **Toggle** - Switch state

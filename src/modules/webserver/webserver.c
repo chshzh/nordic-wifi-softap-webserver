@@ -43,8 +43,8 @@ static void button_listener(const struct zbus_channel *chan)
 {
 	const struct button_msg *msg = zbus_chan_const_msg(chan);
 	
-	if (msg->button_number >= 1 && msg->button_number <= NUM_BUTTONS) {
-		int idx = msg->button_number - 1;
+	if (msg->button_number < NUM_BUTTONS) {
+		int idx = msg->button_number;
 		button_states[idx].button_number = msg->button_number;
 		button_states[idx].press_count = msg->press_count;
 		button_states[idx].is_pressed = (msg->type == BUTTON_PRESSED);
@@ -163,10 +163,8 @@ static int button_api_handler(struct http_client_ctx *client,
 
 	for (int i = 0; i < NUM_BUTTONS; i++) {
 		const bool is_last = (i == NUM_BUTTONS - 1);
-		const uint8_t button_number = button_states[i].button_number ?
-			button_states[i].button_number : (i + 1);
-		const size_t label_index = (button_number > 0) ? (size_t)(button_number - 1) : 0;
-		const char *button_name = app_button_label(label_index);
+		const uint8_t button_number = button_states[i].button_number;
+		const char *button_name = app_button_label(button_number);
 
 		written = snprintf((char *)button_api_buf + offset, remaining,
 			"{\"number\":%u,\"name\":\"%s\",\"pressed\":%s,\"count\":%u}%s",
@@ -300,8 +298,8 @@ static int led_post_api_handler(struct http_client_ctx *client,
 	
 	LOG_INF("LED control: LED %d, action='%s'", cmd.led, cmd.action);
 
-	if (cmd.led < 1 || cmd.led > NUM_LEDS) {
-		LOG_WRN("LED command out of range: %d", cmd.led);
+	if (cmd.led >= NUM_LEDS) {
+		LOG_WRN("LED command out of range: %d (max: %d)", cmd.led, NUM_LEDS - 1);
 		response_ctx->status = HTTP_400_BAD_REQUEST;
 		response_ctx->final_chunk = true;
 		return 0;
@@ -379,7 +377,7 @@ int webserver_module_init(void)
 	
 	/* Initialize button states */
 	for (int i = 0; i < NUM_BUTTONS; i++) {
-		button_states[i].button_number = i + 1;
+		button_states[i].button_number = i;
 		button_states[i].is_pressed = false;
 		button_states[i].press_count = 0;
 	}

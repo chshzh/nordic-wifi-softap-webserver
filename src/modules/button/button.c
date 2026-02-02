@@ -91,7 +91,8 @@ static void button_pressed_entry(void *obj)
 	if (ret < 0) {
 		LOG_ERR("Failed to publish button pressed event: %d", ret);
 	} else {
-		LOG_INF("Button %d pressed (count: %d)", sm->button_number, sm->press_count);
+		const char *label = app_button_label(sm->button_number);
+		LOG_INF("%s pressed (count: %d)", label, sm->press_count);
 	}
 }
 
@@ -123,7 +124,8 @@ static void button_released_entry(void *obj)
 	if (ret < 0) {
 		LOG_ERR("Failed to publish button released event: %d", ret);
 	} else {
-		LOG_INF("Button %d released", sm->button_number);
+		const char *label = app_button_label(sm->button_number);
+		LOG_INF("%s released", label);
 	}
 	
 	/* Return to idle state */
@@ -136,11 +138,15 @@ static void button_released_entry(void *obj)
 
 static void button_handler(uint32_t button_state, uint32_t has_changed)
 {
+	LOG_DBG("Button handler: state=0x%08x changed=0x%08x", button_state, has_changed);
+	
 	for (int i = 0; i < NUM_BUTTONS; i++) {
 		uint32_t button_mask = BIT(i);
 		
 		if (has_changed & button_mask) {
 			button_sm[i].current_state = (button_state & button_mask) ? true : false;
+			LOG_DBG("Button index %d (mask 0x%x) changed: %s", i, button_mask,
+				button_sm[i].current_state ? "pressed" : "released");
 			
 			/* Run state machine */
 			int ret = smf_run_state(SMF_CTX(&button_sm[i]));
@@ -180,6 +186,7 @@ int button_module_init(void)
 	int ret;
 	
 	LOG_INF("Initializing button module");
+	LOG_INF("NUM_BUTTONS = %d", NUM_BUTTONS);
 	
 	/* Initialize DK buttons */
 	ret = dk_buttons_init(button_handler);
@@ -188,14 +195,19 @@ int button_module_init(void)
 		return ret;
 	}
 	
+	LOG_INF("DK buttons initialized successfully");
+	
 	/* Initialize state machines for each button */
 	for (int i = 0; i < NUM_BUTTONS; i++) {
-		button_sm[i].button_number = i + 1;
+		button_sm[i].button_number = i;
 		button_sm[i].press_count = 0;
 		button_sm[i].current_state = false;
 		button_sm[i].previous_state = false;
 		
 		smf_set_initial(SMF_CTX(&button_sm[i]), &button_states[0]);
+		
+		const char *label = app_button_label(i);
+		LOG_INF("Initialized button %d: %s", i, label);
 	}
 	
 	LOG_INF("Button module initialized");

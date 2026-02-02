@@ -172,7 +172,7 @@ function renderButtonStates(buttons) {
 
     buttons.forEach(button => {
         const num = Number(button.number);
-        if (!Number.isFinite(num) || num <= 0) {
+        if (!Number.isFinite(num) || num < 0) {
             return;
         }
 
@@ -186,6 +186,7 @@ function renderButtonStates(buttons) {
         if (entry.nameElem) {
             entry.nameElem.textContent = label;
         }
+        
         if (entry.stateElem) {
             entry.stateElem.textContent = button.pressed ? 'Pressed' : 'Released';
             entry.stateElem.style.color = button.pressed ? BUTTON_PRESSED_COLOR : BUTTON_RELEASED_COLOR;
@@ -220,14 +221,10 @@ function ensureButtonElement(number) {
     const node = templateRoot.cloneNode(true);
     node.id = `button${number}`;
 
-    const icon = node.querySelector('.button-icon');
     const nameElem = node.querySelector('.button-name');
     const stateElem = node.querySelector('.button-state');
     const countElem = node.querySelector('.button-count span');
 
-    if (icon) {
-        icon.textContent = number;
-    }
     if (nameElem) {
         nameElem.textContent = `Button ${number}`;
     }
@@ -273,7 +270,7 @@ function renderLedStates(data) {
             isOn: Boolean(item.is_on),
             name: typeof item.name === 'string' ? item.name : undefined,
         }))
-        .filter(item => Number.isFinite(item.number) && item.number > 0)
+        .filter(item => Number.isFinite(item.number) && item.number >= 0)
         .sort((a, b) => a.number - b.number);
 
     if (ledPlaceholder) {
@@ -295,6 +292,10 @@ function renderLedStates(data) {
         if (entry.nameElem) {
             entry.nameElem.textContent = label;
         }
+        
+        // Update LED indicator number based on label format (for consistency with buttons)
+        // Currently LEDs don't have numbered circles, but keeping structure consistent
+        
         if (entry.indicator) {
             if (isOn) {
                 entry.indicator.classList.add('on');
