@@ -78,6 +78,34 @@ west flash
 > **⚠️ Hardware Limitation (nRF54LM20DK + nRF7002EBII):**  
 > When using the nRF7002EBII shield, **BUTTON3 is not available** due to pin conflicts with the shield's UART30 configuration (the shield overlay deletes `button_3`). Only **BUTTON0, BUTTON1, and BUTTON2** are functional on this hardware combination. All 4 LEDs remain available.
 
+## 🧭 Workspace Application Setup
+
+This repo is a **workspace application** as described in Nordic's guide ([Creating an application → Workspace application](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/app_dev/create_application.html#workspace_application)). Everything you need is already declared in [`west.yml`](west.yml):
+
+```yaml
+manifest:
+  version: 0.13
+  defaults:
+    remote: ncs
+  remotes:
+    - name: ncs
+      url-base: https://github.com/nrfconnect
+  projects:
+    - name: nrf
+      revision: v3.2.1
+      import: true
+  self:
+    path: nordic_wifi_softap_webserver
+```
+
+**Quick start:**
+
+1. Follow the Nordic docs section above for the detailed workflow (VS Code or CLI).
+2. When the guide tells you to provide a manifest, point it to this project's `west.yml`.
+3. Run `west update`, then build and flash as usual (`west build …`, `west flash`).
+
+That's it—by referencing the official instructions you get a reproducible workspace tied to the NCS version pinned in the manifest.
+
 ### Connect
 
 1. **Power on** the development kit

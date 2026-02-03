@@ -1,0 +1,142 @@
+name: Build and Test Nordic WiFi SoftAP Webserver
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  set-version:
+    runs-on: ubuntu-24.04
+    outputs:
+      NCS_VERSION: ${{ steps.extract-version.outputs.NCS_VERSION }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: app-workspace/nordic_wifi_softap_webserver
+
+      - name: Extract NCS version from west.yml
+        id: extract-version
+        working-directory: app-workspace/nordic_wifi_softap_webserver
+        run: |
+          NCS_VERSION=$(grep 'revision:' west.yml | awk '{print $2}')
+          echo "NCS_VERSION=${NCS_VERSION}" >> $GITHUB_OUTPUT
+
+  build-and-test:
+    needs: set-version
+    runs-on: ubuntu-24.04
+    container: ghcr.io/nrfconnect/sdk-nrf-toolchain:${{ needs.set-version.outputs.NCS_VERSION }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        config:
+          - name: "nRF7002DK SoftAP"
+            build_dir: "build_nrf7002dk"
+            board: "nrf7002dk/nrf5340/cpuapp"
+            cmake_args: ""
+          - name: "nRF54LM20DK + nRF7002EBII"
+            build_dir: "build_nrf54lm20dk"
+            board: "nrf54lm20dk/nrf54lm20a/cpuapp"
+            cmake_args: "-Dnordic_wifi_softap_webserver_SHIELD=nrf7002eb2 -Dnordic_wifi_softap_webserver_SNIPPET=nrf70-wifi"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: app-workspace/nordic_wifi_softap_webserver
+
+      - name: Prepare west workspace
+        working-directory: app-workspace
+        run: |
+          west init -l nordic_wifi_softap_webserver
+          west update -o=--depth=1 -n
+
+      - name: Build ${{ matrix.config.name }}
+        working-directory: app-workspace/nordic_wifi_softap_webserver
+        run: |
+          EXTRA_ARGS="${{ matrix.config.cmake_args }}"
+          if [ -n "$EXTRA_ARGS" ]; then
+            west build -p -b ${{ matrix.config.board }} -d ${{ matrix.config.build_dir }} -- $EXTRA_ARGS
+          else
+            west build -p -b ${{ matrix.config.board }} -d ${{ matrix.config.build_dir }}
+          fi
+
+      - name: Upload artifacts for ${{ matrix.config.name }}
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.config.build_dir }}
+          path: |
+            app-workspace/nordic_wifi_softap_webserver/${{ matrix.config.build_dir }}/merged.hex
+
+  static-analysis:
+    needs: set-version
+    runs-on: ubuntu-24.04
+    container: ghcr.io/nrfconnect/sdk-nrf-toolchain:${{ needs.set-version.outputs.NCS_VERSION }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: app-workspace/nordic_wifi_softap_webserver
+
+      - name: Prepare west workspace for checks
+        working-directory: app-workspace
+        run: |
+          west init -l nordic_wifi_softap_webserver
+          west update -o=--depth=1 -n
+
+      - name: Run Zephyr checkpatch on latest changes
+        working-directory: app-workspace
+        run: |
+          echo "Running checkpatch..."
+          if (cd nordic_wifi_softap_webserver && git rev-parse --verify HEAD~1 >/dev/null 2>&1); then
+            cd nordic_wifi_softap_webserver
+            git diff HEAD~1 | ../zephyr/scripts/checkpatch.pl --no-tree -
+          else
+            echo "Single commit detected, checking all source files..."
+            if [ -d nordic_wifi_softap_webserver/src/ ]; then
+              cd nordic_wifi_softap_webserver
+              for file in $(find src/ -name "*.c" -o -name "*.h"); do
+                if [ -f "$file" ]; then
+                  echo "Checking $file"
+                  ../zephyr/scripts/checkpatch.pl --no-tree --file "$file" || true
+                fi
+              done
+            fi
+          fi
+
+      - name: Enforce clang-format style
+        working-directory: app-workspace
+        run: |
+          echo "Checking formatting..."
+          if [ -f zephyr/.clang-format ]; then
+            cp zephyr/.clang-format nordic_wifi_softap_webserver/.clang-format
+          fi
+          if [ -d nordic_wifi_softap_webserver/src/ ]; then
+            format_issues=0
+            while IFS= read -r file; do
+              if ! clang-format --dry-run --Werror "$file" >/dev/null 2>&1; then
+                echo "❌ Formatting issues: $file"
+                format_issues=$((format_issues + 1))
+              else
+                echo "✓ $file"
+              fi
+            done < <(find nordic_wifi_softap_webserver/src/ -name "*.c" -o -name "*.h")
+            if [ $format_issues -gt 0 ]; then
+              echo "Found formatting issues in $format_issues file(s)"
+              exit 1
+            fi
+          else
+            echo "No source files found for formatting check"
+          fi
