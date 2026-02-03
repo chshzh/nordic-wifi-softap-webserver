@@ -12,8 +12,8 @@
 #ifndef LED_H
 #define LED_H
 
-#include <zephyr/kernel.h>
 #include <stdint.h>
+#include <zephyr/kernel.h>
 
 /**
  * @brief Initialize LED module

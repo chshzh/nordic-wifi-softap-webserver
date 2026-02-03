@@ -6,11 +6,11 @@
 
 #include "network.h"
 #include <zephyr/logging/log.h>
-#include <zephyr/net/net_if.h>
 #include <zephyr/net/net_event.h>
-#include <zephyr/net/wifi_mgmt.h>
+#include <zephyr/net/net_if.h>
 #include <zephyr/net/net_mgmt.h>
 #include <zephyr/net/socket.h>
+#include <zephyr/net/wifi_mgmt.h>
 
 LOG_MODULE_REGISTER(network_module, CONFIG_NETWORK_MODULE_LOG_LEVEL);
 

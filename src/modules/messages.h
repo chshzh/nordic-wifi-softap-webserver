@@ -12,8 +12,8 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
 

@@ -5,21 +5,21 @@
  */
 
 #include "webserver.h"
-#include "../messages.h"
 #include "../button/button.h"
 #include "../led/led.h"
+#include "../messages.h"
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(webserver_module, CONFIG_WEBSERVER_MODULE_LOG_LEVEL);
 
-#include <zephyr/kernel.h>
-#include <zephyr/smf.h>
-#include <zephyr/zbus/zbus.h>
-#include <zephyr/net/http/service.h>
-#include <zephyr/data/json.h>
-#include <zephyr/sys/util.h>
 #include <stdio.h>
 #include <string.h>
+#include <zephyr/data/json.h>
+#include <zephyr/kernel.h>
+#include <zephyr/net/http/service.h>
+#include <zephyr/smf.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/zbus/zbus.h>
 
 #define NUM_BUTTONS APP_NUM_BUTTONS
 #define NUM_LEDS    APP_NUM_LEDS

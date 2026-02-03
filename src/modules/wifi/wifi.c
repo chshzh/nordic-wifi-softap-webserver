@@ -10,16 +10,16 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(wifi_module, CONFIG_WIFI_MODULE_LOG_LEVEL);
 
+#include "net_private.h"
 #include <zephyr/kernel.h>
-#include <zephyr/smf.h>
-#include <zephyr/zbus/zbus.h>
+#include <zephyr/net/dhcpv4_server.h>
+#include <zephyr/net/net_event.h>
 #include <zephyr/net/net_if.h>
 #include <zephyr/net/net_mgmt.h>
-#include <zephyr/net/net_event.h>
-#include <zephyr/net/wifi_mgmt.h>
-#include <zephyr/net/dhcpv4_server.h>
 #include <zephyr/net/socket.h>
-#include "net_private.h"
+#include <zephyr/net/wifi_mgmt.h>
+#include <zephyr/smf.h>
+#include <zephyr/zbus/zbus.h>
 
 /* ============================================================================
  * ZBUS CHANNEL DEFINITION

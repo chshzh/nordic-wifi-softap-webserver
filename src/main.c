@@ -12,9 +12,9 @@ LOG_MODULE_REGISTER(main, CONFIG_LOG_DEFAULT_LEVEL);
 
 #include "modules/button/button.h"
 #include "modules/led/led.h"
-#include "modules/wifi/wifi.h"
-#include "modules/webserver/webserver.h"
 #include "modules/messages.h"
+#include "modules/webserver/webserver.h"
+#include "modules/wifi/wifi.h"
 
 /* ============================================================================
  * APPLICATION STATE MONITORING

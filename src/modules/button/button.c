@@ -10,10 +10,10 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(button_module, CONFIG_BUTTON_MODULE_LOG_LEVEL);
 
+#include <dk_buttons_and_leds.h>
 #include <zephyr/kernel.h>
 #include <zephyr/smf.h>
 #include <zephyr/zbus/zbus.h>
-#include <dk_buttons_and_leds.h>
 
 #define NUM_BUTTONS APP_NUM_BUTTONS
 
