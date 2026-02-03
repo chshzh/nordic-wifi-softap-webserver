@@ -21,29 +21,21 @@ LOG_MODULE_REGISTER(led_module, CONFIG_LED_MODULE_LOG_LEVEL);
 
 /* ============================================================================
  * ZBUS CHANNEL DEFINITIONS
- * ============================================================================ */
+ * ============================================================================
+ */
 
 /* LED command channel (subscribe to this) */
-ZBUS_CHAN_DEFINE(LED_CMD_CHAN,
-		 struct led_msg,
-		 NULL,
-		 NULL,
-		 ZBUS_OBSERVERS_EMPTY,
-		 ZBUS_MSG_INIT(0)
-);
+ZBUS_CHAN_DEFINE(LED_CMD_CHAN, struct led_msg, NULL, NULL, ZBUS_OBSERVERS_EMPTY,
+		 ZBUS_MSG_INIT(0));
 
 /* LED state channel (publish to this) */
-ZBUS_CHAN_DEFINE(LED_STATE_CHAN,
-		 struct led_state_msg,
-		 NULL,
-		 NULL,
-		 ZBUS_OBSERVERS_EMPTY,
-		 ZBUS_MSG_INIT(0)
-);
+ZBUS_CHAN_DEFINE(LED_STATE_CHAN, struct led_state_msg, NULL, NULL,
+		 ZBUS_OBSERVERS_EMPTY, ZBUS_MSG_INIT(0));
 
 /* ============================================================================
  * STATE MACHINE CONTEXT
- * ============================================================================ */
+ * ============================================================================
+ */
 
 /* Forward declarations */
 static void led_on_entry(void *obj);
@@ -70,20 +62,21 @@ static struct led_sm_object led_sm[NUM_LEDS];
 
 /* ============================================================================
  * STATE MACHINE IMPLEMENTATIONS
- * ============================================================================ */
+ * ============================================================================
+ */
 
 static void led_off_entry(void *obj)
 {
 	struct led_sm_object *sm = (struct led_sm_object *)obj;
 	struct led_state_msg state_msg;
-	
+
 	/* Turn LED off */
 	dk_set_led_off(sm->led_number);
 	sm->is_on = false;
-	
+
 	const char *label = app_led_label(sm->led_number);
 	LOG_DBG("%s turned OFF", label);
-	
+
 	/* Publish state */
 	state_msg.led_number = sm->led_number;
 	state_msg.is_on = false;
@@ -93,16 +86,16 @@ static void led_off_entry(void *obj)
 static enum smf_state_result led_off_run(void *obj)
 {
 	struct led_sm_object *sm = (struct led_sm_object *)obj;
-	
+
 	if (sm->has_pending_command) {
 		sm->has_pending_command = false;
-		
-		if (sm->pending_command == LED_COMMAND_ON || 
+
+		if (sm->pending_command == LED_COMMAND_ON ||
 		    sm->pending_command == LED_COMMAND_TOGGLE) {
 			smf_set_state(SMF_CTX(sm), &led_states[1]);
 		}
 	}
-	
+
 	return SMF_EVENT_HANDLED;
 }
 
@@ -110,14 +103,14 @@ static void led_on_entry(void *obj)
 {
 	struct led_sm_object *sm = (struct led_sm_object *)obj;
 	struct led_state_msg state_msg;
-	
+
 	/* Turn LED on */
 	dk_set_led_on(sm->led_number);
 	sm->is_on = true;
-	
+
 	const char *label = app_led_label(sm->led_number);
 	LOG_DBG("%s turned ON", label);
-	
+
 	/* Publish state */
 	state_msg.led_number = sm->led_number;
 	state_msg.is_on = true;
@@ -127,37 +120,39 @@ static void led_on_entry(void *obj)
 static enum smf_state_result led_on_run(void *obj)
 {
 	struct led_sm_object *sm = (struct led_sm_object *)obj;
-	
+
 	if (sm->has_pending_command) {
 		sm->has_pending_command = false;
-		
-		if (sm->pending_command == LED_COMMAND_OFF || 
+
+		if (sm->pending_command == LED_COMMAND_OFF ||
 		    sm->pending_command == LED_COMMAND_TOGGLE) {
 			smf_set_state(SMF_CTX(sm), &led_states[0]);
 		}
 	}
-	
+
 	return SMF_EVENT_HANDLED;
 }
 
 /* ============================================================================
  * ZBUS LISTENER
- * ============================================================================ */
+ * ============================================================================
+ */
 
 static void led_cmd_listener(const struct zbus_channel *chan)
 {
 	const struct led_msg *msg = zbus_chan_const_msg(chan);
-	
+
 	if (msg->led_number >= NUM_LEDS) {
-		LOG_WRN("Invalid LED number: %d (max: %d)", msg->led_number, NUM_LEDS - 1);
+		LOG_WRN("Invalid LED number: %d (max: %d)", msg->led_number,
+			NUM_LEDS - 1);
 		return;
 	}
-	
+
 	struct led_sm_object *sm = &led_sm[msg->led_number];
-	
+
 	sm->pending_command = msg->type;
 	sm->has_pending_command = true;
-	
+
 	/* Run state machine */
 	int ret = smf_run_state(SMF_CTX(sm));
 	if (ret < 0) {
@@ -170,14 +165,15 @@ ZBUS_CHAN_ADD_OBS(LED_CMD_CHAN, led_cmd_listener_def, 0);
 
 /* ============================================================================
  * PUBLIC API
- * ============================================================================ */
+ * ============================================================================
+ */
 
 int led_get_state(uint8_t led_number, bool *state)
 {
 	if (led_number >= NUM_LEDS || !state) {
 		return -EINVAL;
 	}
-	
+
 	*state = led_sm[led_number].is_on;
 	return 0;
 }
@@ -200,12 +196,11 @@ int led_get_all_states_json(char *buf, size_t buf_len)
 	for (int i = 0; i < NUM_LEDS; i++) {
 		bool is_last = (i == NUM_LEDS - 1);
 		const char *led_name = app_led_label(i);
-		written = snprintf(buf + offset, remaining,
-				 "{\"number\":%d,\"name\":\"%s\",\"is_on\":%s}%s",
-				 i,
-				 led_name ? led_name : "",
-				 led_sm[i].is_on ? "true" : "false",
-				 is_last ? "" : ",");
+		written = snprintf(
+			buf + offset, remaining,
+			"{\"number\":%d,\"name\":\"%s\",\"is_on\":%s}%s", i,
+			led_name ? led_name : "",
+			led_sm[i].is_on ? "true" : "false", is_last ? "" : ",");
 		if (written < 0 || written >= remaining) {
 			return -ENOMEM;
 		}
@@ -222,35 +217,36 @@ int led_get_all_states_json(char *buf, size_t buf_len)
 
 /* ============================================================================
  * MODULE INITIALIZATION
- * ============================================================================ */
+ * ============================================================================
+ */
 
 int led_module_init(void)
 {
 	int ret;
-	
+
 	LOG_INF("Initializing LED module");
-	
+
 	/* Initialize DK LEDs */
 	ret = dk_leds_init();
 	if (ret) {
 		LOG_ERR("Failed to initialize DK LEDs: %d", ret);
 		return ret;
 	}
-	
+
 	/* Initialize state machines for each LED */
 	for (int i = 0; i < NUM_LEDS; i++) {
 		led_sm[i].led_number = i;
 		led_sm[i].is_on = false;
 		led_sm[i].has_pending_command = false;
-		
+
 		smf_set_initial(SMF_CTX(&led_sm[i]), &led_states[0]);
-		
+
 		/* Run initial state */
 		smf_run_state(SMF_CTX(&led_sm[i]));
 	}
-	
+
 	LOG_INF("LED module initialized");
-	
+
 	return 0;
 }
 

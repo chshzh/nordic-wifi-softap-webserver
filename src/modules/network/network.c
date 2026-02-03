@@ -16,9 +16,8 @@ LOG_MODULE_REGISTER(network_module, CONFIG_NETWORK_MODULE_LOG_LEVEL);
 
 /* Event masks */
 #define L2_IF_EVENT_MASK (NET_EVENT_IF_DOWN | NET_EVENT_IF_UP)
-#define L2_SOFTAP_EVENT_MASK \
-	(NET_EVENT_WIFI_AP_ENABLE_RESULT | \
-	 NET_EVENT_WIFI_AP_STA_CONNECTED | \
+#define L2_SOFTAP_EVENT_MASK                                                   \
+	(NET_EVENT_WIFI_AP_ENABLE_RESULT | NET_EVENT_WIFI_AP_STA_CONNECTED |   \
 	 NET_EVENT_WIFI_AP_STA_DISCONNECTED)
 
 /* Semaphores for network events */
@@ -43,8 +42,7 @@ static struct softap_station connected_stations[MAX_SOFTAP_STATIONS];
 static K_MUTEX_DEFINE(station_mutex);
 
 static void iface_event_handler(struct net_mgmt_event_callback *cb,
-				uint64_t mgmt_event,
-				struct net_if *iface)
+				uint64_t mgmt_event, struct net_if *iface)
 {
 	char ifname[IFNAMSIZ + 1] = {0};
 
@@ -66,8 +64,7 @@ static void iface_event_handler(struct net_mgmt_event_callback *cb,
 }
 
 static void softap_event_handler(struct net_mgmt_event_callback *cb,
-				 uint64_t mgmt_event,
-				 struct net_if *iface)
+				 uint64_t mgmt_event, struct net_if *iface)
 {
 	const struct wifi_status *status;
 	const struct wifi_ap_sta_info *sta_info;
@@ -87,50 +84,53 @@ static void softap_event_handler(struct net_mgmt_event_callback *cb,
 
 	case NET_EVENT_WIFI_AP_STA_CONNECTED:
 		sta_info = (const struct wifi_ap_sta_info *)cb->info;
-		
-		snprintf(mac_str, sizeof(mac_str), 
-			 "%02x:%02x:%02x:%02x:%02x:%02x",
-			 sta_info->mac[0], sta_info->mac[1], sta_info->mac[2],
-			 sta_info->mac[3], sta_info->mac[4], sta_info->mac[5]);
-		
+
+		snprintf(mac_str, sizeof(mac_str),
+			 "%02x:%02x:%02x:%02x:%02x:%02x", sta_info->mac[0],
+			 sta_info->mac[1], sta_info->mac[2], sta_info->mac[3],
+			 sta_info->mac[4], sta_info->mac[5]);
+
 		LOG_INF("Station connected: %s", mac_str);
-		
+
 		/* Find empty slot */
 		k_mutex_lock(&station_mutex, K_FOREVER);
 		for (int i = 0; i < MAX_SOFTAP_STATIONS; i++) {
 			if (!connected_stations[i].valid) {
 				connected_stations[i].valid = true;
-				memcpy(connected_stations[i].mac, sta_info->mac, 6);
+				memcpy(connected_stations[i].mac, sta_info->mac,
+				       6);
 				slot = i;
 				break;
 			}
 		}
 		k_mutex_unlock(&station_mutex);
-		
+
 		if (slot >= 0) {
 			LOG_DBG("Station stored in slot %d", slot);
 		}
-		
+
 		k_sem_give(&station_connected_sem);
 		break;
 
 	case NET_EVENT_WIFI_AP_STA_DISCONNECTED:
 		sta_info = (const struct wifi_ap_sta_info *)cb->info;
-		
+
 		snprintf(mac_str, sizeof(mac_str),
-			 "%02x:%02x:%02x:%02x:%02x:%02x",
-			 sta_info->mac[0], sta_info->mac[1], sta_info->mac[2],
-			 sta_info->mac[3], sta_info->mac[4], sta_info->mac[5]);
-		
+			 "%02x:%02x:%02x:%02x:%02x:%02x", sta_info->mac[0],
+			 sta_info->mac[1], sta_info->mac[2], sta_info->mac[3],
+			 sta_info->mac[4], sta_info->mac[5]);
+
 		LOG_INF("Station disconnected: %s", mac_str);
-		
+
 		/* Remove from tracking */
 		k_mutex_lock(&station_mutex, K_FOREVER);
 		for (int i = 0; i < MAX_SOFTAP_STATIONS; i++) {
 			if (connected_stations[i].valid &&
-			    memcmp(connected_stations[i].mac, sta_info->mac, 6) == 0) {
+			    memcmp(connected_stations[i].mac, sta_info->mac,
+				   6) == 0) {
 				connected_stations[i].valid = false;
-				memset(&connected_stations[i], 0, sizeof(struct softap_station));
+				memset(&connected_stations[i], 0,
+				       sizeof(struct softap_station));
 				break;
 			}
 		}
