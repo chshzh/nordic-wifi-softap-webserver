@@ -62,7 +62,8 @@ int main(void)
 	LOG_INF("All modules initialized via SYS_INIT");
 	LOG_INF("WiFi SoftAP will start automatically");
 	LOG_INF("Connect to WiFi SSID: %s", CONFIG_APP_WIFI_SSID);
-	LOG_INF("WiFi Password: %s", CONFIG_APP_WIFI_PASSWORD);
+	LOG_INF("Use password configured in overlay-wifi-credentials.conf.");
+	LOG_INF("Or default WiFi Password 12345678 for SSID nRF70-WebServer.");
 	LOG_INF("Then browse to: http://192.168.7.1:%d", CONFIG_APP_HTTP_PORT);
 	LOG_INF("==============================================");
 

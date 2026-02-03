@@ -194,8 +194,8 @@ west build -p -b nrf7002dk/nrf5340/cpuapp
 
 | ID | User Story | Acceptance Criteria | Related Feature |
 |----|------------|---------------------|-----------------|
-| FR-001 | As a user, I want to connect my device to the WiFi network created by the nRF device | - WiFi SSID "nRF70-WebServer" visible<br>- Password "12345678" accepted<br>- IP address assigned (192.168.1.x) | Wi-Fi SoftAP |
-| FR-002 | As a user, I want to view button states in real-time via web browser | - Web UI loads at http://192.168.1.1<br>- Button states update every 500ms<br>- Press count displayed accurately | HTTP Server, Button Module |
+| FR-001 | As a user, I want to connect my device to the WiFi network created by the nRF device | - WiFi SSID "nRF70-WebServer" visible<br>- Password "12345678" accepted<br>- IP address assigned (192.168.7.x) | Wi-Fi SoftAP |
+| FR-002 | As a user, I want to view button states in real-time via web browser | - Web UI loads at http://192.168.7.1<br>- Button tiles appear for every available button (2 on nRF7002DK, 3 on nRF54LM20DK + nRF7002EBII)<br>- Button states update every 500ms<br>- Press count displayed accurately | HTTP Server, Button Module |
 | FR-003 | As a user, I want to control LEDs through the web interface | - ON/OFF/Toggle buttons functional<br>- LED state reflects actual hardware<br>- Visual indicator shows current state | LED Module, HTTP Server |
 | FR-004 | As a developer, I want clear module separation using SMF+Zbus | - Each module is independent<br>- Communication only via Zbus<br>- State machines properly defined | SMF, Zbus |
 | FR-005 | As a user, I want the device to start automatically on power-up | - SoftAP starts within 5 seconds<br>- HTTP server auto-starts<br>- No manual intervention needed | WiFi Module, Webserver Module |
@@ -253,8 +253,10 @@ west build -p -b nrf7002dk/nrf5340/cpuapp
 | MCU (7002DK) | nRF5340 (Dual Cortex-M33) | 1 | Application core @ 128 MHz |
 | WiFi Chip | nRF7002 | 1 | Wi-Fi 6 (802.11ax) |
 | Power Supply | USB or external | 1 | 5V USB or 7-20V external |
-| Buttons | 4 GPIO buttons | 4 | DK Library compatible |
-| LEDs | 4 GPIO LEDs | 4 | DK Library compatible |
+| Buttons (nRF7002DK) | 2 GPIO buttons | 2 | DK Library compatible |
+| Buttons (nRF54LM20DK + nRF7002EBII) | 3 GPIO buttons | 3 | Shield disables BUTTON3 |
+| LEDs (nRF7002DK) | 2 GPIO LEDs | 2 | DK Library compatible |
+| LEDs (nRF54LM20DK + nRF7002EBII) | 4 GPIO LEDs | 4 | DK Library compatible |
 
 **Memory Requirements**:
 - **Flash**: 804 KB (Available: 1024 KB)
@@ -274,7 +276,7 @@ west build -p -b nrf7002dk/nrf5340/cpuapp
 1. **Primary Flow - Quick Start**:
    - Power on device
    - Connect to WiFi (nRF70-WebServer)
-   - Open browser to 192.168.1.1
+   - Open browser to 192.168.7.1
    - View and control hardware
 
 2. **Secondary Flow - API Integration**:
@@ -338,8 +340,8 @@ graph TB
     end
     
     subgraph "Hardware Layer"
-        HW_BTN[4x Buttons<br/>GPIO Input]
-        HW_LED[4x LEDs<br/>GPIO Output]
+      HW_BTN[2-3x Buttons<br/>GPIO Input]
+      HW_LED[2-4x LEDs<br/>GPIO Output]
         HW_WIFI[nRF7002<br/>WiFi Chip]
     end
     
@@ -395,14 +397,13 @@ WiFi Module → WIFI_CHAN → Webserver Module (status)
 
 **Module 1: Button Module**
 - **Purpose**: Monitor GPIO button states, detect presses/releases, maintain press counts
-- **Inputs**: GPIO interrupts from 4 hardware buttons
+- **Inputs**: GPIO interrupts from 2-3 hardware buttons (board-dependent)
 - **Outputs**: Button events via BUTTON_CHAN (pressed/released/count)
 - **State Machine**: 3 states (Idle → Pressed → Released → Idle)
 - **Dependencies**: DK Library (GPIO), Zbus
 - **Files**: `src/modules/button/button.c`, `button.h`, `Kconfig.button`
 
-**Module 2: LED Module**
-- **Purpose**: Control 4 GPIO LEDs, respond to on/off/toggle commands
+- **Purpose**: Control 2-4 GPIO LEDs (depending on board), respond to on/off/toggle commands
 - **Inputs**: LED command messages via LED_CMD_CHAN
 - **Outputs**: LED state messages via LED_STATE_CHAN, GPIO control
 - **State Machine**: 2 states per LED (On ↔ Off)
@@ -643,7 +644,7 @@ sequenceDiagram
 **Prototype**:
 ```http
 GET /api/buttons HTTP/1.1
-Host: 192.168.1.1
+Host: 192.168.7.1
 ```
 
 **Response**:
@@ -664,7 +665,7 @@ Host: 192.168.1.1
 
 **Example**:
 ```javascript
-fetch('http://192.168.1.1/api/buttons')
+fetch('http://192.168.7.1/api/buttons')
   .then(response => response.json())
   .then(data => console.log(data.buttons));
 ```
@@ -676,7 +677,7 @@ fetch('http://192.168.1.1/api/buttons')
 **Prototype**:
 ```http
 GET /api/leds HTTP/1.1
-Host: 192.168.1.1
+Host: 192.168.7.1
 ```
 
 **Response**:
@@ -700,7 +701,7 @@ Host: 192.168.1.1
 **Prototype**:
 ```http
 POST /api/led HTTP/1.1
-Host: 192.168.1.1
+Host: 192.168.7.1
 Content-Type: application/json
 
 {
@@ -720,7 +721,7 @@ Content-Type: application/json
 
 **Example**:
 ```javascript
-fetch('http://192.168.1.1/api/led', {
+fetch('http://192.168.7.1/api/led', {
   method: 'POST',
   headers: {'Content-Type': 'application/json'},
   body: JSON.stringify({led: 1, action: 'toggle'})
@@ -794,7 +795,7 @@ struct led_state_msg {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `CONFIG_NET_CONFIG_MY_IPV4_ADDR` | string | "192.168.1.1" | Static IP address |
+| `CONFIG_NET_CONFIG_MY_IPV4_ADDR` | string | "192.168.7.1" | Static IP address |
 | `CONFIG_NET_CONFIG_MY_IPV4_NETMASK` | string | "255.255.255.0" | Subnet mask |
 | `CONFIG_NET_DHCPV4_SERVER_ADDR_COUNT` | int | 10 | DHCP pool size |
 | `CONFIG_APP_HTTP_PORT` | int | 80 | HTTP server port |
@@ -857,13 +858,13 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 2. Wait 5 seconds
 3. Scan for WiFi networks on test device
 4. Attempt to connect with password "12345678"
-5. Verify IP address received (192.168.1.x)
+5. Verify IP address received (192.168.7.x)
 
 **Expected Results**:
 - SSID "nRF70-WebServer" appears in scan
 - Connection successful within 10 seconds
-- IP address in range 192.168.1.2 - 192.168.1.11
-- Default gateway is 192.168.1.1
+- IP address in range 192.168.7.2 - 192.168.7.11
+- Default gateway is 192.168.7.1
 
 **Status**: ✅ Pass
 
@@ -879,7 +880,7 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 
 **Test Steps**:
 1. Open browser
-2. Navigate to http://192.168.1.1
+2. Navigate to http://192.168.7.1
 3. Observe page load time
 4. Verify all elements visible
 
@@ -907,7 +908,7 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 2. Observe web interface (within 1 second)
 3. Release Button 1
 4. Observe press count increment
-5. Repeat for Buttons 2, 3, 4
+5. Repeat for every remaining button available on your board (2 total on nRF7002DK, 3 on nRF54LM20DK + nRF7002EBII)
 
 **Expected Results**:
 - Button state changes to "Pressed" during press
@@ -934,14 +935,14 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 4. Click "OFF" button for LED1
 5. Observe changes
 6. Click "Toggle" button twice
-7. Test all 4 LEDs
+7. Test all available LEDs (2 on nRF7002DK, 4 on nRF54LM20DK + nRF7002EBII)
 
 **Expected Results**:
 - Physical LED turns on within 100ms of clicking ON
 - Web interface shows green indicator
 - Physical LED turns off within 100ms of clicking OFF
 - Toggle switches state each click
-- All 4 LEDs respond independently
+- All available LEDs respond independently
 
 **Status**: ✅ Pass
 
@@ -956,16 +957,16 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 - API accessible
 
 **Test Steps**:
-1. Send GET request to http://192.168.1.1/api/buttons
+1. Send GET request to http://192.168.7.1/api/buttons
 2. Parse JSON response
-3. Press Button 2
+3. Press another hardware button (for example, Button 2)
 4. Send GET request again
 5. Compare responses
 
 **Expected Results**:
 - HTTP 200 status code
 - Valid JSON with "buttons" array
-- 4 button objects in array
+- Button array contains one object per available hardware button
 - After press, count increases by 1
 - Pressed state reflects actual hardware
 
@@ -982,10 +983,10 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 - API accessible
 
 **Test Steps**:
-1. Send POST http://192.168.1.1/api/led with {"led":3,"action":"on"}
+1. Send POST http://192.168.7.1/api/led with the highest valid LED index for your board (e.g., `{ "led":1,"action":"on" }` on nRF7002DK)
 2. Verify HTTP response
-3. Observe LED3 physically
-4. Send POST with {"led":3,"action":"off"}
+3. Observe the addressed LED physically
+4. Send POST with the same LED index and `{"action":"off"}`
 5. Test "toggle" action
 6. Test invalid parameters
 
@@ -1117,7 +1118,7 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 1. **Wait 5 seconds** for WiFi to start (LED1 indicates activity)
 2. **On your phone/laptop**, open WiFi settings
 3. **Connect to**: SSID `nRF70-WebServer`, Password `12345678`
-4. **Open browser**, navigate to `http://192.168.1.1`
+4. **Open browser**, navigate to `http://192.168.7.1`
 5. **You should see** the device control interface!
 
 ### 8.2 Operation Guide
@@ -1140,13 +1141,13 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 **REST API Access**:
 ```bash
 # Get button status
-curl http://192.168.1.1/api/buttons
+curl http://192.168.7.1/api/buttons
 
 # Get LED status
-curl http://192.168.1.1/api/leds
+curl http://192.168.7.1/api/leds
 
 # Control LED
-curl -X POST http://192.168.1.1/api/led \
+curl -X POST http://192.168.7.1/api/led \
   -H "Content-Type: application/json" \
   -d '{"led":1,"action":"toggle"}'
 ```
@@ -1344,9 +1345,9 @@ A: Not in v1.0. HTTPS would require TLS certificates (+80KB flash). Consider for
 ┌─────────────────────────────────────────────┐
 │          nRF7002DK (SoftAP)                │
 │                                             │
-│  IP: 192.168.1.1                           │
+│  IP: 192.168.7.1                           │
 │  Netmask: 255.255.255.0                    │
-│  DHCP: 192.168.1.2 - 192.168.1.11          │
+│  DHCP: 192.168.7.2 - 192.168.7.11          │
 │  HTTP Server: Port 80                      │
 │  mDNS: nrfwifi.local                       │
 └──────────────────┬──────────────────────────┘

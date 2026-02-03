@@ -77,3 +77,4 @@ keys/
 local_config.conf
 local_overlay.conf
 overlay-production.conf
+overlay-wifi-credentials.conf

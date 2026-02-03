@@ -113,7 +113,8 @@ That's it—by referencing the official instructions you get a reproducible work
 3. **Connect your phone/laptop** to WiFi:
    - SSID: `nRF70-WebServer`
    - Password: `12345678`
-4. **Open browser** to: `http://192.168.1.1`
+  - (If you applied the credential overlay, use your custom SSID/password.)
+4. **Open browser** to: `http://192.168.7.1`
 
 ## 📡 WiFi Configuration
 
@@ -126,38 +127,34 @@ CONFIG_APP_HTTP_PORT=80
 ```
 
 Static IP configuration:
-- **Device IP**: 192.168.1.1
+- **Device IP**: 192.168.7.1
 - **Netmask**: 255.255.255.0
-- **Gateway**: 192.168.1.1
-- **DHCP Server**: Enabled (192.168.1.2 - 192.168.1.11)
+- **Gateway**: 192.168.7.1
+- **DHCP Server**: Enabled (192.168.7.2 - 192.168.7.11)
 
 ### 🔒 Security Note
 
 **⚠️ IMPORTANT**: The default WiFi password `"12345678"` is for **demonstration purposes only**.
 
 **For production use:**
-1. Change the SSID and password in `Kconfig` or create an overlay file:
-   ```properties
-   # Create: overlay-production.conf
-   CONFIG_APP_WIFI_SSID="YourProductionSSID"
-   CONFIG_APP_WIFI_PASSWORD="YourStrongPassword123!"
-   ```
+1. Copy the credential template and keep the real overlay out of version control:
+  ```bash
+  cp overlay-wifi-credentials.conf.template overlay-wifi-credentials.conf
+  ```
 
-2. Build with production credentials:
-   ```bash
-   west build -p -b nrf7002dk/nrf5340/cpuapp -- \
-     -DEXTRA_CONF_FILE=overlay-production.conf
-   ```
+2. Edit `overlay-wifi-credentials.conf` with your SSID/password (the filename is already listed in `.gitignore`).
 
-3. Add overlay file to `.gitignore` to prevent credential leaks:
-   ```bash
-   echo "overlay-production.conf" >> .gitignore
-   ```
+3. Build with the credential overlay applied:
+  ```bash
+  west build -p -b nrf7002dk/nrf5340/cpuapp -- \
+    -DEXTRA_CONF_FILE=overlay-wifi-credentials.conf
+  ```
 
 **Password Requirements:**
 - Minimum 8 characters (WPA2-PSK requirement)
 - Recommended: 12+ characters with mixed case, numbers, and symbols
 - Never commit production credentials to version control
+  (only `overlay-wifi-credentials.conf.template` is tracked by git)
 
 ## 🖥️ Web Interface
 
@@ -195,14 +192,12 @@ Get current button states.
 ```json
 {
   "buttons": [
-    {"number": 1, "name": "BUTTON0", "pressed": false, "count": 5},
-    {"number": 2, "name": "BUTTON1", "pressed": true, "count": 12},
-    {"number": 3, "name": "BUTTON2", "pressed": false, "count": 0},
-    {"number": 4, "name": "BUTTON3", "pressed": false, "count": 3}
+    {"number": 0, "name": "Button 1", "pressed": false, "count": 5},
+    {"number": 1, "name": "Button 2", "pressed": true, "count": 12}
   ]
 }
 ```
-Names adjust automatically based on the connected board (for example, nRF7002DK reports "Button 1" style labels).
+Names adjust automatically based on the connected board (for example, nRF54LM20DK+nRF7002EBII adds a third entry for BUTTON2).
 
 ### GET /api/leds
 
@@ -212,14 +207,12 @@ Get current LED states.
 ```json
 {
   "leds": [
-    {"number": 1, "name": "LED0", "is_on": true},
-    {"number": 2, "name": "LED1", "is_on": false},
-    {"number": 3, "name": "LED2", "is_on": true},
-    {"number": 4, "name": "LED3", "is_on": false}
+    {"number": 0, "name": "LED1", "is_on": true},
+    {"number": 1, "name": "LED2", "is_on": false}
   ]
 }
 ```
-As with buttons, LED names reflect the board-specific labeling.
+Additional LED entries automatically appear on platforms with more GPIOs (e.g., four LED objects on nRF54LM20DK+nRF7002EBII).
 
 ### POST /api/led
 
@@ -342,7 +335,7 @@ Heap requirement: **100 KB minimum** (configured in `prj.conf`)
 
 ### Web interface not loading
 
-1. Verify IP address is 192.168.1.1
+1. Verify IP address is 192.168.7.1
 2. Check HTTP server is running (check logs)
 3. Ensure firewall is not blocking connection
 4. Try different browser
