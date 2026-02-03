@@ -416,7 +416,7 @@ SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 
 ## �️ Development
 
-This project was developed using [Claude Skills](https://github.com/chshzh/claude-skills) with Product Manager and Developer roles for systematic requirements management, architecture design, and implementation.
+This project was developed using [Charlie Skills](https://github.com/chshzh/charlie-skills) with Product Manager and Developer roles for systematic requirements management, architecture design, and implementation.
 
 ---
 
