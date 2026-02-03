@@ -1,5 +1,11 @@
 # Nordic WiFi SoftAP Webserver
 
+[![Build and Test Nordic WiFi SoftAP Webserver](https://github.com/chshzh/nordic-wifi-softap-webserver/actions/workflows/build.yml/badge.svg)](https://github.com/chshzh/nordic-wifi-softap-webserver/actions/workflows/build.yml)
+[![License](https://img.shields.io/badge/License-LicenseRef--Nordic--5--Clause-blue.svg)](LICENSE)
+[![NCS Version](https://img.shields.io/badge/NCS-v3.2.1-green.svg)](https://www.nordicsemi.com/Products/Development-software/nRF-Connect-SDK)
+![Nordic Semiconductor](https://img.shields.io/badge/Nordic%20Semiconductor-nRF7002DK-blue)
+![Nordic Semiconductor](https://img.shields.io/badge/Nordic%20Semiconductor-nRF54LM20DK%2BnRF7002EBII-red)
+
 A professional WiFi SoftAP web server application for **nRF7002DK** and **nRF54LM20DK+nRF7002EBII** development kits. Features a modular SMF+Zbus architecture for button monitoring and LED control via a web interface.
 
 ## 🎯 Features
@@ -75,7 +81,7 @@ west build -p -b nrf54lm20dk/nrf54lm20a/cpuapp -- \
 west flash
 ```
 
-> **⚠️ Hardware Limitation (nRF54LM20DK + nRF7002EBII):**  
+> **⚠️ Hardware Limitation (nRF54LM20DK + nRF7002EBII):**
 > When using the nRF7002EBII shield, **BUTTON3 is not available** due to pin conflicts with the shield's UART30 configuration (the shield overlay deletes `button_3`). Only **BUTTON0, BUTTON1, and BUTTON2** are functional on this hardware combination. All 4 LEDs remain available.
 
 ## 🧭 Workspace Application Setup

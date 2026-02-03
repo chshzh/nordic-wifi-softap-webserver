@@ -308,7 +308,7 @@ west build -p -b nrf7002dk/nrf5340/cpuapp
 
 **Selected Pattern**: SMF + Zbus Modular Architecture
 
-**Justification**: 
+**Justification**:
 - Provides loose coupling between modules for better maintainability
 - Demonstrates professional architecture patterns for production systems
 - Enables easy addition of new modules without affecting existing code
@@ -316,14 +316,14 @@ west build -p -b nrf7002dk/nrf5340/cpuapp
 - State machines provide clear, verifiable behavior
 
 **Trade-offs**:
-- **Pros**: 
+- **Pros**:
   - Highly maintainable and testable
   - Clear separation of concerns
   - Scalable to larger systems
   - Facilitates parallel development
   - Industry best practice for embedded systems
-  
-- **Cons**: 
+
+- **Cons**:
   - Slightly higher overhead (~10 KB) vs simple threading
   - Requires understanding of SMF and Zbus concepts
   - More initial setup complexity
@@ -338,13 +338,13 @@ graph TB
         LED_STATE[LED_STATE_CHAN]
         WIFI_CHAN[WIFI_CHAN]
     end
-    
+
     subgraph "Hardware Layer"
       HW_BTN[2-3x Buttons<br/>GPIO Input]
       HW_LED[2-4x LEDs<br/>GPIO Output]
         HW_WIFI[nRF7002<br/>WiFi Chip]
     end
-    
+
     subgraph "Module Layer"
         ButtonMod[Button Module<br/>SMF State Machine]
         LEDMod[LED Module<br/>SMF State Machine]
@@ -352,24 +352,24 @@ graph TB
         WebMod[Webserver Module<br/>HTTP Handlers]
         NetMod[Network Module<br/>Event Handlers]
     end
-    
+
     HW_BTN -->|GPIO IRQ| ButtonMod
     ButtonMod -->|Publish Events| BUTTON_CHAN
-    
+
     LED_CMD -->|Subscribe| LEDMod
     LEDMod -->|Publish State| LED_STATE
     LEDMod -->|Control| HW_LED
-    
+
     WiFiMod -->|Publish Status| WIFI_CHAN
     HW_WIFI <-->|WiFi Driver| WiFiMod
-    
+
     NetMod -->|Network Events| WIFI_CHAN
-    
+
     BUTTON_CHAN -->|Subscribe| WebMod
     LED_STATE -->|Subscribe| WebMod
     WebMod -->|POST LED Cmd| LED_CMD
     WebMod -->|HTTP Server| Client[Web Browser]
-    
+
     WiFiMod -.->|DHCP/mDNS| NetMod
 ```
 
@@ -443,12 +443,12 @@ stateDiagram-v2
     Idle --> Pressed: Button Down
     Pressed --> Released: Button Up
     Released --> Idle: Event Published
-    
+
     note right of Pressed
         Increment count
         Publish PRESSED event
     end note
-    
+
     note right of Released
         Publish RELEASED event
     end note
@@ -462,12 +462,12 @@ stateDiagram-v2
     Off --> On: LED_COMMAND_TOGGLE
     On --> Off: LED_COMMAND_OFF
     On --> Off: LED_COMMAND_TOGGLE
-    
+
     note right of On
         GPIO HIGH
         Publish LED_ON state
     end note
-    
+
     note right of Off
         GPIO LOW
         Publish LED_OFF state
@@ -483,13 +483,13 @@ stateDiagram-v2
     Starting --> Error: AP_ENABLE_FAILED
     Active --> Active: Client Connect/Disconnect
     Error --> Idle: Retry
-    
+
     note right of Starting
         Configure regulatory domain
         Start DHCP server
         Enable SoftAP
     end note
-    
+
     note right of Active
         SoftAP running
         Publish WIFI_SOFTAP_STARTED
@@ -507,7 +507,7 @@ sequenceDiagram
     participant Web
     participant LED
     participant Button
-    
+
     Main->>LED: Initialize
     LED->>LED: Set all LEDs to OFF
     Main->>Button: Initialize
@@ -517,9 +517,9 @@ sequenceDiagram
     Main->>WiFi: Initialize
     WiFi->>WiFi: Set to Idle state
     Main->>Web: Initialize
-    
+
     Note over Main: System Ready
-    
+
     WiFi->>WiFi: Auto-start SoftAP
     WiFi->>Network: Request network setup
     Network-->>WiFi: Network configured
@@ -527,10 +527,10 @@ sequenceDiagram
     WiFi->>WPA: Enable AP mode
     WPA-->>WiFi: AP_ENABLE_SUCCESS
     WiFi->>Zbus: Publish WIFI_SOFTAP_STARTED
-    
+
     Web->>HTTP: Start HTTP server
     HTTP-->>Web: Server listening on :80
-    
+
     Note over WiFi,Web: Ready for connections
 ```
 
@@ -542,18 +542,18 @@ sequenceDiagram
     participant Bus as Zbus
     participant Web as Webserver
     participant HTTP as HTTP Client
-    
+
     HW->>Btn: GPIO Interrupt (Press)
     Btn->>Btn: State: Idle → Pressed
     Btn->>Btn: Increment press_count
     Btn->>Bus: Publish BUTTON_PRESSED event
-    
+
     Note over HTTP: User clicks refresh or<br/>auto-refresh triggers
-    
+
     HTTP->>Web: GET /api/buttons
     Web->>Bus: Read BUTTON_CHAN
     Web->>HTTP: JSON response with states
-    
+
     HW->>Btn: GPIO Interrupt (Release)
     Btn->>Btn: State: Pressed → Released
     Btn->>Bus: Publish BUTTON_RELEASED event
@@ -568,19 +568,19 @@ sequenceDiagram
     participant Bus as Zbus
     participant LED as LED Module
     participant HW as LED Hardware
-    
+
     HTTP->>Web: POST /api/led<br/>{"led":1,"action":"on"}
     Web->>Web: Parse JSON
     Web->>Bus: Publish to LED_CMD_CHAN<br/>{led=1, cmd=ON}
     Web->>HTTP: 200 OK
-    
+
     Bus->>LED: Notify listener
     LED->>LED: State: Off → On
     LED->>HW: GPIO Set HIGH
     LED->>Bus: Publish to LED_STATE_CHAN<br/>{led=1, state=ON}
-    
+
     Note over HTTP: Next GET /api/leds
-    
+
     HTTP->>Web: GET /api/leds
     Web->>Bus: Read LED_STATE_CHAN
     Web->>HTTP: JSON {"led1":true,...}
@@ -1218,13 +1218,70 @@ A: Not in v1.0. HTTPS would require TLS certificates (+80KB flash). Consider for
 
 ## 9. Release & Maintenance
 
-### 9.1 Version History
+### 9.1 CI/CD Automation
+
+The project implements fully automated build, test, and release workflows using GitHub Actions.
+
+**Build Pipeline** (`.github/workflows/build.yml`):
+- Automatically triggers on:
+  - Push to `main` and `develop` branches
+  - Pull requests to `main`
+  - Version tags (format: `v*`)
+- Extracts NCS version from `west.yml`
+- Uses official Nordic SDK container: `ghcr.io/nrfconnect/sdk-nrf-toolchain:${NCS_VERSION}`
+- Builds firmware for both supported boards:
+  - nRF7002DK (nrf7002dk/nrf5340/cpuapp)
+  - nRF54LM20DK + nRF7002EBII (nrf54lm20dk/nrf54lm20a/cpuapp with shield)
+
+**Quality Gates**:
+1. **Documentation Validation**
+   - Verifies required README sections exist
+   - Checks configuration file presence
+   - Validates credential template exists
+
+2. **Static Code Analysis**
+   - Runs Zephyr checkpatch on all source files
+   - Enforces clang-format code style compliance
+   - Blocks merges on formatting violations
+
+**Automated Releases** (on version tags):
+- Generates changelog from commit history since last tag
+- Creates release packages:
+  - Individual `.hex` files per board
+  - Combined `.zip` archive with all firmware
+- Publishes GitHub Release with:
+  - Auto-generated release notes
+  - Complete firmware binaries
+  - Board-specific flash instructions
+  - Changelog summary
+
+**Release Process**:
+```bash
+# 1. Update version in documentation
+# 2. Create and push version tag
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+
+# 3. GitHub Actions automatically:
+#    - Builds firmware for all boards
+#    - Runs quality checks
+#    - Creates GitHub Release
+#    - Attaches firmware files
+```
+
+**Quality Metrics**:
+- All PRs must pass CI checks before merge
+- Code formatting enforced automatically
+- Documentation completeness verified on every build
+- Release artifacts reproducible from git tags
+
+### 9.2 Version History
 
 | Version | Date | Engineer | Changes |
 |---------|------|----------|---------|
 | 1.0.0 | Feb 2, 2026 | Engineering Team | - Initial release<br>- WiFi SoftAP mode<br>- HTTP server with web UI<br>- Button monitoring<br>- LED control<br>- REST API<br>- SMF+Zbus architecture |
 
-### 9.2 Known Limitations
+### 9.3 Known Limitations
 
 | Issue ID | Description | Severity | Workaround | Status |
 |----------|-------------|----------|------------|--------|
@@ -1241,7 +1298,7 @@ A: Not in v1.0. HTTPS would require TLS certificates (+80KB flash). Consider for
 - **ISS-002**: Fixed LED index out of range errors by limiting LED module to 2 LEDs (matching nRF7002DK hardware). Previously attempted to initialize 4 LEDs.
 - **Configuration optimizations**: Increased eventfd handles (ZVFS_EVENTFD_MAX=16), heap size (120KB), and system stack sizes for improved stability.
 
-### 9.3 Product Roadmap
+### 9.4 Product Roadmap
 
 **Version 1.1** (Planned - Q2 2026):
 - WiFi credential provisioning via BLE
@@ -1263,19 +1320,19 @@ A: Not in v1.0. HTTPS would require TLS certificates (+80KB flash). Consider for
 - Machine learning on-device
 - Mesh networking support
 
-### 9.4 Support & Maintenance Plan
+### 9.5 Support & Maintenance Plan
 
-- **Support Channels**: 
+- **Support Channels**:
   - GitHub Issues: `<repository_url>/issues`
   - Email: support@yourcompany.com
   - Community Forum: Nordic DevZone
 
-- **Update Frequency**: 
+- **Update Frequency**:
   - Security patches: As needed (within 7 days)
   - Bug fixes: Monthly
   - Feature updates: Quarterly
 
-- **End of Life Policy**: 
+- **End of Life Policy**:
   - Minimum 2 years support from release
   - 6 months advance notice before EOL
   - Migration guide to successor products
