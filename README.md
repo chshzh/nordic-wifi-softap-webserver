@@ -18,6 +18,51 @@ A professional WiFi SoftAP web server application for **nRF7002DK** and **nRF54L
 - ✅ **RESTful API** - JSON-based HTTP API for integration
 - ✅ **Auto-Refresh** - Real-time updates every 500ms
 
+## 📁 Project Structure
+
+```
+nordic_wifi_softap_webserver/
+├── CMakeLists.txt           # Main build configuration
+├── Kconfig                  # Kconfig menu
+├── prj.conf                 # Project configuration
+├── LICENSE                  # Nordic 5-Clause license
+├── README.md                # This file
+├── .gitignore              # Git ignore patterns
+│
+├── boards/                  # Board-specific configs
+│   └── nrf7002dk_nrf5340_cpuapp.conf
+│
+├── src/
+│   ├── main.c              # Application entry point
+│   └── modules/
+│       ├── messages.h      # Common message definitions
+│       ├── button/         # Button module
+│       │   ├── button.c
+│       │   ├── button.h
+│       │   ├── CMakeLists.txt
+│       │   └── Kconfig.button
+│       ├── led/            # LED module
+│       │   ├── led.c
+│       │   ├── led.h
+│       │   ├── CMakeLists.txt
+│       │   └── Kconfig.led
+│       ├── wifi/           # WiFi SoftAP module
+│       │   ├── wifi.c
+│       │   ├── wifi.h
+│       │   ├── CMakeLists.txt
+│       │   └── Kconfig.wifi
+│       └── webserver/      # HTTP server module
+│           ├── webserver.c
+│           ├── webserver.h
+│           ├── CMakeLists.txt
+│           └── Kconfig.webserver
+│
+└── www/                    # Web interface files
+    ├── index.html
+    ├── main.js
+    └── styles.css
+```
+
 ## 📋 Architecture
 
 This project uses Nordic's recommended **SMF (State Machine Framework) + Zbus (Message Bus)** modular architecture:
@@ -120,7 +165,9 @@ That's it—by referencing the official instructions you get a reproducible work
    - SSID: `nRF70-WebServer`
    - Password: `12345678`
   - (If you applied the credential overlay, use your custom SSID/password.)
-4. **Open browser** to: `http://192.168.7.1`
+4. **Open browser** to:
+   - `http://192.168.7.1` (static IP)
+   - `http://nrfwifi.local` (mDNS hostname - may not work on all devices)
 
 ## 📡 WiFi Configuration
 
@@ -137,6 +184,9 @@ Static IP configuration:
 - **Netmask**: 255.255.255.0
 - **Gateway**: 192.168.7.1
 - **DHCP Server**: Enabled (192.168.7.2 - 192.168.7.11)
+- **mDNS Hostname**: nrfwifi.local (enabled for easy discovery)
+
+> **Note**: mDNS (`.local` hostname) may not work on all devices. Android devices often lack native mDNS support. Use the static IP `192.168.7.1` for guaranteed access.
 
 ### 🔒 Security Note
 
@@ -163,6 +213,8 @@ Static IP configuration:
   (only `overlay-wifi-credentials.conf.template` is tracked by git)
 
 ## 🖥️ Web Interface
+
+![Web Interface](picture/webgui.png)
 
 ### Button Status Panel
 
@@ -234,54 +286,9 @@ Control an LED.
 
 **Actions:** `"on"`, `"off"`, `"toggle"`
 
-## 📁 Project Structure
-
-```
-nordic_wifi_softap_webserver/
-├── CMakeLists.txt           # Main build configuration
-├── Kconfig                  # Kconfig menu
-├── prj.conf                 # Project configuration
-├── LICENSE                  # Nordic 5-Clause license
-├── README.md                # This file
-├── .gitignore              # Git ignore patterns
-│
-├── boards/                  # Board-specific configs
-│   └── nrf7002dk_nrf5340_cpuapp.conf
-│
-├── src/
-│   ├── main.c              # Application entry point
-│   └── modules/
-│       ├── messages.h      # Common message definitions
-│       ├── button/         # Button module
-│       │   ├── button.c
-│       │   ├── button.h
-│       │   ├── CMakeLists.txt
-│       │   └── Kconfig.button
-│       ├── led/            # LED module
-│       │   ├── led.c
-│       │   ├── led.h
-│       │   ├── CMakeLists.txt
-│       │   └── Kconfig.led
-│       ├── wifi/           # WiFi SoftAP module
-│       │   ├── wifi.c
-│       │   ├── wifi.h
-│       │   ├── CMakeLists.txt
-│       │   └── Kconfig.wifi
-│       └── webserver/      # HTTP server module
-│           ├── webserver.c
-│           ├── webserver.h
-│           ├── CMakeLists.txt
-│           └── Kconfig.webserver
-│
-└── www/                    # Web interface files
-    ├── index.html
-    ├── main.js
-    └── styles.css
-```
-
 ## 🔧 Customization
 
-### Change WiFi Credentials
+### Change Default WiFi Credentials
 
 Edit `prj.conf`:
 ```properties
@@ -307,9 +314,10 @@ const REFRESH_INTERVAL = 1000; // Change to 1 second
 
 Edit `prj.conf`:
 ```properties
-CONFIG_NET_HOSTNAME="mydevice"
-CONFIG_HTTPS_HOSTNAME="mydevice.local"
+CONFIG_NET_HOSTNAME="nrfwifi"
 ```
+
+Then access via `http://nrfwifi.local` (default) or your custom hostname.
 
 ## 📊 Memory Usage
 
@@ -386,7 +394,7 @@ Enable thread analyzer in `prj.conf`:
 CONFIG_THREAD_ANALYZER=y
 CONFIG_THREAD_ANALYZER_USE_LOG=y
 CONFIG_THREAD_ANALYZER_AUTO=y
-CONFIG_THREAD_NAME=y
+CONFIG_THREAD_ANALYZER_AUTO_INTERVAL=5
 ```
 
 ## 📚 References
@@ -406,9 +414,9 @@ Copyright (c) 2026 Nordic Semiconductor ASA
 
 SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 
-## 👤 Author
+## �️ Development
 
-Generated using Nordic nCS Project Skills
+This project was developed using [Claude Skills](https://github.com/chshzh/claude-skills) with Product Manager and Developer roles for systematic requirements management, architecture design, and implementation.
 
 ---
 
