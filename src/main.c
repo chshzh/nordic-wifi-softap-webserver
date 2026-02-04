@@ -9,6 +9,8 @@ LOG_MODULE_REGISTER(main, CONFIG_LOG_DEFAULT_LEVEL);
 
 #include <zephyr/kernel.h>
 #include <zephyr/zbus/zbus.h>
+#include <zephyr/net/net_if.h>
+#include <string.h>
 
 #include "modules/button/button.h"
 #include "modules/led/led.h"
@@ -52,11 +54,34 @@ ZBUS_CHAN_ADD_OBS(WIFI_CHAN, wifi_event_listener_def, 0);
 
 int main(void)
 {
+	struct net_if *iface = net_if_get_default();
+	struct net_linkaddr *mac_addr = net_if_get_link_addr(iface);
+	const char *board_name;
+
+	/* Convert board name to proper case */
+	if (strcmp(CONFIG_BOARD, "nrf7002dk") == 0 ||
+	    strstr(CONFIG_BOARD, "nrf7002dk") != NULL) {
+		board_name = "nRF7002DK";
+	} else if (strcmp(CONFIG_BOARD, "nrf54lm20dk") == 0 ||
+		   strstr(CONFIG_BOARD, "nrf54lm20dk") != NULL) {
+		board_name = "nRF54LM20DK+nRF7002EBII";
+	} else {
+		board_name = CONFIG_BOARD;
+	}
+
 	LOG_INF("==============================================");
 	LOG_INF("Nordic WiFi SoftAP Webserver");
 	LOG_INF("==============================================");
 	LOG_INF("Build: %s %s", __DATE__, __TIME__);
-	LOG_INF("Board: %s", CONFIG_BOARD);
+	LOG_INF("Board: %s", board_name);
+
+	/* Print MAC address in the format "MAC: F4:CE:36:00:8B:E9" */
+	if (mac_addr && mac_addr->len == 6) {
+		LOG_INF("MAC: %02X:%02X:%02X:%02X:%02X:%02X", mac_addr->addr[0],
+			mac_addr->addr[1], mac_addr->addr[2], mac_addr->addr[3],
+			mac_addr->addr[4], mac_addr->addr[5]);
+	}
+
 	LOG_INF("==============================================");
 
 	LOG_INF("All modules initialized via SYS_INIT");
