@@ -21,11 +21,18 @@ LOG_MODULE_REGISTER(webserver_module, CONFIG_WEBSERVER_MODULE_LOG_LEVEL);
 #include <zephyr/sys/util.h>
 #include <zephyr/zbus/zbus.h>
 
-#define NUM_BUTTONS APP_NUM_BUTTONS
-#define NUM_LEDS    APP_NUM_LEDS
+#define NUM_BUTTONS     APP_NUM_BUTTONS
+#define NUM_LEDS        APP_NUM_LEDS
+/* Allow multiple simultaneous HTTP requests per device while DHCP limits
+ * the network to two stations total. Each browser typically opens 3-4
+ * connections (HTML, JS, CSS, API), so we keep a slightly higher limit
+ * here to avoid blocking page load.
+ */
+#define MAX_WEB_CLIENTS 6
 
 BUILD_ASSERT(NUM_BUTTONS > 0, "At least one button expected");
 BUILD_ASSERT(NUM_LEDS > 0, "At least one LED expected");
+BUILD_ASSERT(MAX_WEB_CLIENTS > 0, "At least one web client must be allowed");
 
 /* ============================================================================
  * BUTTON STATE TRACKING (via Zbus)
@@ -70,8 +77,8 @@ ZBUS_CHAN_ADD_OBS(BUTTON_CHAN, button_listener_def, 0);
  */
 
 static uint16_t http_service_port = CONFIG_APP_HTTP_PORT;
-HTTP_SERVICE_DEFINE(webserver_service, NULL, &http_service_port, 1, 10, NULL,
-		    NULL, NULL);
+HTTP_SERVICE_DEFINE(webserver_service, NULL, &http_service_port,
+		    MAX_WEB_CLIENTS, MAX_WEB_CLIENTS, NULL, NULL, NULL);
 
 /* ============================================================================
  * STATIC WEB RESOURCES
@@ -376,6 +383,7 @@ HTTP_RESOURCE_DEFINE(led_post_api_resource, webserver_service, "/api/led",
 int webserver_start(void)
 {
 	LOG_INF("Starting HTTP server on port %d", CONFIG_APP_HTTP_PORT);
+	LOG_INF("Enforcing max %d concurrent HTTP clients", MAX_WEB_CLIENTS);
 
 	int ret = http_server_start();
 	if (ret < 0) {

@@ -17,6 +17,7 @@ A professional WiFi SoftAP web server application for **nRF7002DK** and **nRF54L
 - ✅ **SMF + Zbus Architecture** - Modular, maintainable, production-ready design
 - ✅ **RESTful API** - JSON-based HTTP API for integration
 - ✅ **Auto-Refresh** - Real-time updates every 500ms
+- ✅ **Dual-Client Guardrail** - SoftAP and HTTP stack enforce a strict two-station limit for demo stability
 
 ## 📁 Project Structure
 
@@ -165,6 +166,7 @@ That's it—by referencing the official instructions you get a reproducible work
    - SSID: `nRF70-WebServer`
    - Password: `12345678`
   - (If you applied the credential overlay, use your custom SSID/password.)
+  - **Limit**: Only two stations can be connected at a time; disconnect another client before adding a third.
 4. **Open browser** to:
    - `http://192.168.7.1` (static IP)
    - `http://nrfwifi.local` (mDNS hostname - may not work on all devices)
@@ -183,7 +185,8 @@ Static IP configuration:
 - **Device IP**: 192.168.7.1
 - **Netmask**: 255.255.255.0
 - **Gateway**: 192.168.7.1
-- **DHCP Server**: Enabled (192.168.7.2 - 192.168.7.11)
+- **DHCP Server**: Enabled with exactly two leases (192.168.7.2 – 192.168.7.3)
+- **Client Ceiling**: WiFi + HTTP layers enforce max 2 stations (each expected to run one browser session)
 - **mDNS Hostname**: nrfwifi.local (enabled for easy discovery)
 
 > **Note**: mDNS (`.local` hostname) may not work on all devices. Android devices often lack native mDNS support. Use the static IP `192.168.7.1` for guaranteed access.

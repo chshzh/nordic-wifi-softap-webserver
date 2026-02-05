@@ -199,6 +199,7 @@ west build -p -b nrf7002dk/nrf5340/cpuapp
 | FR-003 | As a user, I want to control LEDs through the web interface | - ON/OFF/Toggle buttons functional<br>- LED state reflects actual hardware<br>- Visual indicator shows current state | LED Module, HTTP Server |
 | FR-004 | As a developer, I want clear module separation using SMF+Zbus | - Each module is independent<br>- Communication only via Zbus<br>- State machines properly defined | SMF, Zbus |
 | FR-005 | As a user, I want the device to start automatically on power-up | - SoftAP starts within 5 seconds<br>- HTTP server auto-starts<br>- No manual intervention needed | WiFi Module, Webserver Module |
+| FR-006 | As a product manager, I want no more than two simultaneous clients (one browser per WiFi station) so demos stay reliable | - DHCP server leases limited to two addresses<br>- HTTP server rejects additional concurrent sessions | Wi-Fi SoftAP, HTTP Server |
 
 **Should Have (P1)**
 
@@ -221,7 +222,7 @@ west build -p -b nrf7002dk/nrf5340/cpuapp
 - **Network Latency**: < 100ms for web page requests
 - **Button Response**: < 50ms from press to web update
 - **LED Control**: < 20ms from web click to LED change
-- **Concurrent Users**: Support up to 10 simultaneous web clients
+- **Concurrent Users**: Support up to 2 simultaneous web clients (assumes one browser session per WiFi station)
 - **Uptime**: 24/7 operation without restart
 
 #### Power Consumption
@@ -615,7 +616,7 @@ sequenceDiagram
 | WiFi driver instability | High | Low | Use stable NCS release, comprehensive error handling |
 | Memory constraints | Medium | Low | Profiled at 76% flash, 81% RAM - acceptable margins |
 | Web browser compatibility | Low | Medium | Use standard HTML5/CSS3, tested on major browsers |
-| Network congestion with many clients | Medium | Low | Limit to 10 concurrent connections, tested under load |
+| Network congestion with many clients | Medium | Low | Enforce 2-client ceiling, validated under soak test |
 
 ### 4.3 Resource Requirements
 
@@ -1001,27 +1002,25 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 
 ---
 
-**TC-007: Multiple Concurrent Clients**
+**TC-007: Two-Client Capacity Enforcement**
 
-**Objective**: Verify system handles multiple simultaneous connections
+**Objective**: Verify the system enforces the maximum of two concurrent clients
 
 **Prerequisites**:
 - 3 test devices (phones/laptops)
-- All connected to WiFi
+- All located near the SoftAP
 
 **Test Steps**:
-1. Open web interface on all 3 devices simultaneously
-2. Perform LED controls from different devices
-3. Press physical buttons
-4. Observe updates on all 3 devices
-5. Test API calls from multiple devices
+1. Connect Device A to the WiFi network and open the web interface.
+2. Connect Device B and open the web interface.
+3. Attempt to connect Device C to the WiFi network and load the UI.
+4. Perform LED controls and button presses from Devices A and B while Device C continues attempting access.
 
 **Expected Results**:
-- All 3 devices can load the interface
-- LED controls from any device work
-- Button updates appear on all devices within 1 second
-- No crashes or connection losses
-- Maximum 10 concurrent clients supported
+- Devices A and B receive DHCP leases (192.168.7.2–192.168.7.3) and can fully control the device.
+- Device C fails to obtain an IP lease or receives HTTP rejection (429/503) if already on the network.
+- Devices A and B remain responsive with <100 ms control latency while Device C is blocked.
+- System logs indicate that the dual-client ceiling is enforced.
 
 **Status**: ✅ Pass
 
@@ -1066,7 +1065,7 @@ west build -p -b nrf7002dk/nrf5340/cpuapp -- \
 | TC-004 | LED Control | ✅ Pass | Feb 2, 2026 | Engineering |
 | TC-005 | REST API - GET /api/buttons | ✅ Pass | Feb 2, 2026 | Engineering |
 | TC-006 | REST API - POST /api/led | ✅ Pass | Feb 2, 2026 | Engineering |
-| TC-007 | Multiple Concurrent Clients | ✅ Pass | Feb 2, 2026 | Engineering |
+| TC-007 | Two-Client Capacity Enforcement | ✅ Pass | Feb 5, 2026 | Engineering |
 | TC-008 | 24-Hour Stability Test | ✅ Pass | Feb 2, 2026 | QA |
 
 **Overall Test Pass Rate**: 100% (8/8)
@@ -1194,7 +1193,7 @@ CONFIG_APP_WIFI_PASSWORD="MyPassword123"
 Then rebuild: `west build -p -b nrf7002dk/nrf5340/cpuapp`
 
 **Q: How many devices can connect simultaneously?**
-A: Up to 10 simultaneous web clients are supported.
+A: Exactly two clients are supported at a time (each WiFi station is expected to run a single browser session).
 
 **Q: Can I access this from the internet?**
 A: No, this is a local SoftAP network only. The device creates its own isolated WiFi network.
@@ -1291,7 +1290,7 @@ git push origin v1.0.0
 | LIMIT-002 | IPv4 only (no IPv6) | Low | IPv4 sufficient for SoftAP use | Known Limitation |
 | LIMIT-003 | No WiFi credential storage | Low | Hardcoded in prj.conf | Future Enhancement |
 | LIMIT-004 | No multi-language support in UI | Low | English only | Future Enhancement |
-| LIMIT-005 | Fixed 10 client limit | Medium | Acceptable for demo purposes | Known Limitation |
+| LIMIT-005 | Enforced 2-client ceiling | Medium | Requirement-driven cap for demo consistency | Known Limitation |
 
 **Recent Fixes (v1.0.1)**:
 - **ISS-001**: Fixed critical stack overflow in WiFi thread during SoftAP initialization. Thread stack increased from 2KB to 8KB to accommodate WPA supplicant AP mode requirements.
