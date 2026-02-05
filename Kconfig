@@ -33,6 +33,7 @@ rsource "src/modules/button/Kconfig.button"
 rsource "src/modules/led/Kconfig.led"
 rsource "src/modules/wifi/Kconfig.wifi"
 rsource "src/modules/webserver/Kconfig.webserver"
+rsource "src/modules/memory/Kconfig.memory"
 
 endmenu
 

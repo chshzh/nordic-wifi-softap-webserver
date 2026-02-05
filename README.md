@@ -332,9 +332,24 @@ Approximate memory footprint:
 | HTTP Server | ~25 KB | ~20 KB |
 | SMF/Zbus | ~10 KB | ~5 KB |
 | Application | ~15 KB | ~10 KB |
-| **Total** | **~110 KB** | **~85 KB** |
+| **Total (static)** | **~110 KB** | **~85 KB** |
 
-Heap requirement: **100 KB minimum** (configured in `prj.conf`)
+Heap budget (dynamic allocations):
+- Base heap (`CONFIG_HEAP_MEM_POOL_SIZE`): **80 KB**
+- Automatic additions (WPA supplicant, POSIX sockets, Zbus): **~45.7 KB**
+- **Managed heap total**: ≈ **125 KB** with warning raised at **88%** high-water mark
+
+### Heap Monitor
+
+`CONFIG_APP_HEAP_MONITOR` keeps an eye on `_system_heap` via Zephyr's heap listener so you can shrink or grow the base safely:
+
+```text
+[00:00:03.292,000] <inf> app_heap_monitor: Heap alloc: peak=86016 bytes (68% of 125440), used=65536, free=59904
+[00:00:07.914,000] <wrn> app_heap_monitor: Heap alloc: peak=111104 bytes (88% of 125440), used=98304, free=27136
+```
+
+- If warnings appear regularly, either bump `CONFIG_HEAP_MEM_POOL_SIZE` or trim dynamic allocations (HTTP buffers, JSON payloads, etc.).
+- Tweak `CONFIG_APP_HEAP_MONITOR_WARN_PCT` or `CONFIG_APP_HEAP_MONITOR_STEP_BYTES` to match your product's appetite.
 
 ## 🐛 Troubleshooting
 

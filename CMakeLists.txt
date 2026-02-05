@@ -42,6 +42,7 @@ add_subdirectory(src/modules/button)
 add_subdirectory(src/modules/led)
 add_subdirectory(src/modules/wifi)
 add_subdirectory(src/modules/webserver)
+add_subdirectory(src/modules/memory)
 
 target_sources(app PRIVATE
 	src/main.c
